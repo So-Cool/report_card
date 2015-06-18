@@ -1,0 +1,6 @@
+# Mac's files
+.DS_Store
+
+# Developer's files
+_data
+_try.pl
