@@ -1,0 +1,81 @@
+%% A report card template for robots' manipulation tasks
+\documentclass[11pt,a4paper,twocolumn]{article}
+\usepackage[top=0.8in, bottom=1in, left=0.8in, right=0.8in]{geometry}
+\usepackage{times}                                                  % times font
+\usepackage{mathptmx}                                      % times font in maths
+
+\usepackage{lipsum}                                            % for development
+\usepackage{amsmath}
+% \usepackage[usenames,dvipsnames]{color}
+% \newcommand{\ts}{\textsuperscript}
+
+\usepackage{graphicx}                                        % for multi figures
+\usepackage{caption}                                         % for multi figures
+\usepackage{subcaption}                                      % for multi figures
+\usepackage{float}                                           % for multi figures
+% \usepackage{subfigure}                                     % for multi figures
+
+\usepackage{multirow}                                                % in tables
+\usepackage{caption}                                                 % in tables
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{textcomp}                                                % copyright
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}                        % page line
+\pagenumbering{gobble}                                       % no page numbering
+
+\begin{document}
+
+  \twocolumn[
+  \begin{@twocolumnfalse}
+  \begin{center}
+  	\begin{large}
+  	{\HRule \\[0.2cm]}
+  	\textsc{REPORT CARD for robots' manipulation tasks}
+  	{\HRule \\[0.3cm]}
+  	\end{large}
+
+  	\begin{minipage}{ 0.16\textwidth }
+  		\begin{flushleft}
+        {\includegraphics[height=1.2cm]{gfx/openease}}
+  		\end{flushleft}
+  	\end{minipage}
+    \begin{minipage}{ 0.30\textwidth }
+      \begin{flushleft}
+        \texttt{Open EASE \textcopyright}\\%
+        \url{http://open-ease.org}
+      \end{flushleft}
+    \end{minipage}
+%
+  	\begin{minipage}{ 0.46\textwidth }
+  		\begin{flushright}
+        \today\\
+        Trial ID: \#$trialID
+  		\end{flushright}
+  	\end{minipage}
+  \end{center}
+  \end{@twocolumnfalse}
+  ] % \lipsum[1]~\\[0.4cm]
+
+\section*{Overview}
+The total time spent on the experiment is: $totalTime seconds.\\
+It breaks down as follows:
+\begin{figure}[htb]
+  \includegraphics[width=0.45\textwidth]{$totalTimeFigure}
+  \caption{Task-wise time breakdown.}
+\end{figure}
+
+\section*{Actions}
+\lipsum[2]
+
+\section*{Statistics}
+\lipsum[3]
+
+\section*{Failures}
+\lipsum[4]
+
+\section*{Summary}
+\lipsum[5]
+
+\end{document}
