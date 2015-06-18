@@ -4,3 +4,7 @@
 # Developer's files
 _data
 _try.pl
+
+# Build output
+.gradle
+report_card/build
