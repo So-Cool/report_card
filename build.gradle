@@ -48,7 +48,7 @@ allprojects {
       A github url provides a good standard unique name for your project
       Example below, but you may wish to switch to your own unique url.
     */
-    group 'org.knowrob.knowrob_cram'
+    group 'org.knowrob.report_card'
     version = project.catkin.pkg.version
 }
 
