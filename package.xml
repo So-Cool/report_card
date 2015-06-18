@@ -2,19 +2,18 @@
   
   <name>report_card</name>
   <version>0.1.0</version>
+
   <description>
-    
-    report_card
-    
+This package extends functionality of KnowRob system with robot's *log analysis*, *data extraction* and *report card generation*.
   </description>
   
-  <maintainer email="someone@somewhere.com">Some One</maintainer>
+  <maintainer email="k.sokol.2011@my.bristol.ac.uk">Kacper Sokol</maintainer>
   
   <license>BSD</license>
   
   <url type="website">http://ros.org/wiki/report_card</url>
   
-  <author>Some One</author>
+  <author>Kacper Sokol</author>
   
   <buildtool_depend>catkin</buildtool_depend>
   
@@ -25,6 +24,14 @@
   <build_depend>rosjava_build_tools</build_depend>
   <build_depend>rosjava_bootstrap</build_depend>
   <build_depend>rosjava_messages</build_depend>
+
+  <build_depend>swi-prolog</build_depend>
+  <build_depend>swi-prolog-java</build_depend>
+  <build_depend>libjson-java</build_depend>
+  <build_depend>libjson-glib</build_depend>
+  <build_depend>texlive-full</build_depend>
+  <build_depend>r-base</build_depend>
+  <build_depend>r-base-dev</build_depend>
   
   <run_depend>knowrob_common</run_depend>
   <run_depend>comp_temporal</run_depend>
@@ -32,5 +39,13 @@
   <run_depend>knowrob_cram</run_depend>
   <run_depend>rosjava_bootstrap</run_depend>
   <run_depend>rosjava_messages</run_depend>
+
+  <run_depend>swi-prolog</run_depend>
+  <run_depend>swi-prolog-java</run_depend>
+  <run_depend>libjson-java</run_depend>
+  <run_depend>libjson-glib</run_depend>
+  <run_depend>texlive-full</run_depend>
+  <run_depend>r-base</run_depend>
+  <run_depend>r-base-dev</run_depend>
   
 </package>
