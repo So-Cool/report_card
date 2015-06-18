@@ -29,6 +29,8 @@ dependencies {
 
   compile 'org.ros.rosjava_messages:std_msgs:0.5.+'
   compile 'org.ros.rosjava_messages:sensor_msgs:1.10.+'
+
+  compile files('libraries/jlr/jlr.jar')
 }
 
 task writeClasspath << {
