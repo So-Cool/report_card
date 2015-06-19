@@ -26,4 +26,7 @@ catkin_package(
 install(DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_MAVEN_DESTINATION}/org/knowrob/${PROJECT_NAME}/ 
         DESTINATION ${CATKIN_GLOBAL_MAVEN_DESTINATION}/org/knowrob/${PROJECT_NAME})
 
-        
+# Install real pack in SWI-Prolog
+execute_process(
+  COMMAND ${PROJECT_SOURCE_DIR}/build-real.sh
+)
