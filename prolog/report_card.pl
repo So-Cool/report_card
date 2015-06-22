@@ -38,8 +38,8 @@
       report_card_test/2,
       card_type/1,
       data_format/1,
-      generate_report_card/1,
-      generate_report_card/2
+      generate_report_card/0,
+      generate_report_card/1
     ]).
 
 :- use_module(library('semweb/rdfs')).
