@@ -51,7 +51,7 @@
   	\begin{minipage}{ 0.46\textwidth }
   		\begin{flushright}
         \today\\
-        Trial ID: \#$trialID
+        Trial ID: \#\texttt{$trialID}
   		\end{flushright}
   	\end{minipage}
   \end{center}
@@ -59,11 +59,12 @@
   ] % \lipsum[1]~\\[0.4cm]
 
 \section*{Overview}
-The total time spent on the experiment is: $totalTime seconds.\\
-It breaks down as follows:
+Experiment \textbf{$trialName}---codename \#\texttt{$trialID}---created by \emph{$trialCreator} is \emph{$trialType} experiment. Robot \emph{$robotType} performed a task described as ``$trialDescription'', which took $trialTime seconds.\\
+
+The total active time spent on the task is: $totalTime seconds with in-detailed breakdown shown in \emph{Figure~\ref{fig:totalTime}}.
 \begin{figure}[htb]
   \includegraphics[width=0.45\textwidth]{$totalTimeFigure}
-  \caption{Task-wise time breakdown.}
+  \caption{Task-wise time breakdown.\label{fig:totalTime}}
 \end{figure}
 
 \section*{Actions}
