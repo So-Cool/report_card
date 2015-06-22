@@ -9,12 +9,12 @@ project(report_card)
 # Catkin
 ##############################################################################
 
-find_package(catkin REQUIRED rosjava_build_tools knowrob_cram knowrob_mongo)
+find_package(catkin REQUIRED rosjava_build_tools knowrob_cram knowrob_mongo knowrob_common)
 
 catkin_rosjava_setup(installApp publishMavenJavaPublicationToMavenRepository writeClasspath)
 
 catkin_package(
-  DEPENDS knowrob_mongo knowrob_cram
+  DEPENDS knowrob_mongo knowrob_cram knowrob_common
 )
 
 ##############################################################################
