@@ -1,5 +1,5 @@
 /** 
-  Copyright (C) 2013-15 Moritz Tenorth, Asil Kaan Bozcuoglu, Daniel Beßler
+  Copyright (C) 2013-15 Kacper Sokol
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,7 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-  @author Moritz Tenorth, Asil Kaan Bozcuoglu, Daniel Beßler
+  @author Kacper Sokol
   @license BSD
 */
 
