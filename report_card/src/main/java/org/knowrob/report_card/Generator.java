@@ -125,22 +125,24 @@ public class Generator {
   }
 
   /**
-   *  Generate a *basic flavour* report card with given substitutions in
-   *  specified temporary directory.
+   *  Generate a report card with given sections inside specified temporary
+   *  directory.
    *
-   *  @param  fileName   Absolute path to the report card temporary directory
-   *  @param  arguments  Values to be substituted in the LaTeX template
+   *  @param  tempPath   Absolute path to the report card temporary directory
+   *  @param  trialID    Trial identifier extracted from log file
+   *  @param  arguments  Values to be substituted in the LaTeX template -
+   *                     absolute paths to report sections in particular
    *  @return            Absolute path to the created report card
    */
-  public static String basic(String tempPath, String[] arguments) {
+  public static String rc(String tempPath, String trialID, String[] arguments) {
 
     // escape all LaTeX characters
     String[] escapedArguments = latexTheStrings(arguments);
 
     // create absolute paths
     File tempDir = new File(tempPath);
-    File basicFlavour = new File(tempDir.getAbsolutePath() + File.separator +
-      "rcBF.tex");
+    File texOutput = new File(tempDir.getAbsolutePath() + File.separator +
+      "rc.tex");
 
     // check if temporary directory exists
     if (!tempDir.isDirectory()) {
@@ -152,25 +154,30 @@ public class Generator {
       // Create LaTeX conversion engine
       JLRConverter converter = new JLRConverter(sourceDir);
 
-      // Substitute LaTeX variables
-      converter.replace("trialID"         , escapedArguments[0]);
-      converter.replace("trialName"       , escapedArguments[1]);
-      converter.replace("trialCreator"    , escapedArguments[2]);
-      converter.replace("trialType"       , escapedArguments[3]);
-      converter.replace("robotType"       , escapedArguments[4]);
-      converter.replace("trialDescription", escapedArguments[5]);
-      converter.replace("trialTime"       , escapedArguments[6]);
-      converter.replace("totalTime"       , escapedArguments[7]);
-      converter.replace("totalTimeFigure" , escapedArguments[8]);
+      // up to 10 sections are supported ATM
+      if(escapedArguments.length > 10) {
+        System.err.println("Up to 10 sections are supported at the moment; " +
+          "please extend Java and LaTeX code if you need such feature.");
+      }
 
-      if (!converter.parse(template, basicFlavour)) {
+      // Substitute LaTeX variables
+      converter.replace("trialID", trialID);
+      for(int i = 0; i < escapedArguments.length; ++i) {
+        converter.replace("section" + Integer.toString(i), escapedArguments[i]);
+      }
+      // fill with blank conversion up to 10 LaTeX variables
+      for(int i = escapedArguments.length; i < 10; ++i) {
+        converter.replace("section" + Integer.toString(i), "");
+      }
+
+      if (!converter.parse(template, texOutput)) {
         System.err.println(converter.getErrorMessage());
       }
 
       // Generate PDF in temp folder
       JLRGenerator pdfGen = new JLRGenerator();
 
-      if (!pdfGen.generate(basicFlavour, tempDir, sourceDir)) {
+      if (!pdfGen.generate(texOutput, tempDir, sourceDir)) {
         System.err.println(pdfGen.getErrorMessage());
       }
 
@@ -181,7 +188,7 @@ public class Generator {
     }
 
     // return the path to the created report card
-    return tempDir.getAbsolutePath() + File.separator + "rcBF.pdf";
+    return tempDir.getAbsolutePath() + File.separator + "rc.pdf";
 
   }
 
@@ -193,45 +200,52 @@ public class Generator {
    *  @param  arguments  Values to be substituted in the LaTeX template
    *  @return            Absolute path to the created report card
    */
-  public static String simplistic(String fileName, String[] arguments) {
+  public static String section(String tempPath, String section,
+    String[] arguments) {
 
-    File tempDir = new File(File.separator + "home" +
-      File.separator + "knowrob" + File.separator + "temp");
-    File simplisticFlavour = new File(tempDir.getAbsolutePath() +
-      File.separator + "rcSF.tex");
+    // escape all LaTeX characters
+    String[] escapedArguments = latexTheStrings(arguments);
 
-    // check if temporary directory exists
-    if (!tempDir.isDirectory()) {
-      tempDir.mkdir();
-    }
+    // create absolute paths
+    File tempDir = new File(tempPath);
+    File texOutput = new File(tempDir.getAbsolutePath() + File.separator +
+      section + ".tex");
+    File sectionTemplate = new File(sourceDir.getAbsolutePath() + File.separator
+      + section + ".tex");
 
-    // return the path to the created report card
-    return tempDir.getAbsolutePath() + File.separator + "rcSF.pdf";
-
-  }
-
-  /**
-   *  Generate a *detailed flavour* report card with given substitutions in
-   *  specified temporary directory.
-   *
-   *  @param  fileName   Absolute path to the report card temporary directory
-   *  @param  arguments  Values to be substituted in the LaTeX template
-   *  @return            Absolute path to the created report card
-   */
-  public static String detailed(String fileName, String[] arguments) {
-
-    File tempDir = new File(File.separator + "home" +
-      File.separator + "knowrob" + File.separator + "temp");
-    File detailedFlavour = new File(tempDir.getAbsolutePath() +
-      File.separator + "rcDF.tex");
 
     // check if temporary directory exists
     if (!tempDir.isDirectory()) {
+      System.out.println("Couldn't find temp dir: " + tempPath + "; creating!");
       tempDir.mkdir();
     }
 
-    // return the path to the created report card
-    return tempDir.getAbsolutePath() + File.separator + "rcDF.pdf";
+    try {
+      // Create LaTeX conversion engine
+      JLRConverter converter = new JLRConverter(sourceDir);
+
+      // up to 20 arguments per section are supported ATM
+      if(escapedArguments.length > 20) {
+        System.err.println("Up to 20 arguments per section are supported at " +
+          "the moment; please extend Java and LaTeX code if you need such " +
+          "feature.");
+      }
+
+      // Substitute LaTeX variables
+      for(int i = 0; i < escapedArguments.length; ++i) {
+        converter.replace("argument" + Integer.toString(i), escapedArguments[i]);
+      }
+
+      if (!converter.parse(sectionTemplate, texOutput)) {
+        System.err.println(converter.getErrorMessage());
+      }
+
+    } catch (IOException ex) {
+      System.err.println(ex.getMessage());
+    }
+
+    // return the path to the created section
+    return tempDir.getAbsolutePath() + File.separator + section + ".tex";
 
   }
 
