@@ -125,6 +125,7 @@ create_directory(DirectoryPath) :-
 % experimentId;
 % creator, description, experiment, experimentName, robot;
 % timeStart, timeEnd.
+% If parameter cannot be retrieved the function returns "N/A".
 %
 % @param Tag   One of mention above experiment specifics to be extracted
 % @param Info  Extracted experiment specific information
@@ -132,7 +133,7 @@ create_directory(DirectoryPath) :-
 get_experiment_info(experimentId, Info) :-
   rdf_has(Task, rdf:type, knowrob:'RobotExperiment'),
   Origin = 'http://knowrob.org/kb/cram_log.owl#RobotExperiment_',
-  concat(Origin, Info, Task).
+  concat(Origin, Info, Task), !.
 get_experiment_info(Tag, Info) :-
   rdf_has(Task, rdf:type, knowrob:'RobotExperiment'),
   ( Tag = creator        ->  rdf_has(Task, knowrob:'creator', literal(type(xsd:string, Info)))
@@ -142,7 +143,8 @@ get_experiment_info(Tag, Info) :-
   ; Tag = robot          ->  rdf_has(Task, knowrob:'robot', literal(type(xsd:string, Info)))
   ; Tag = timeStart      -> (rdf_has(Task, knowrob:'timeStart', literal(type(xsd:string, At))), atom_number(At, Info))
   ; Tag = timeEnd        -> (rdf_has(Task, knowrob:'timeEnd', literal(type(xsd:string, At))), atom_number(At, Info))
-  ).
+  ), !.
+get_experiment_info(_, 'N/A') :- !.
 
 %% card_type(-Type) is nondet.
 %
@@ -197,33 +199,31 @@ export_data(data_format(r)) :-
   project_specific_path('RCdata.RData', Fname),
   <- save( 'list = c("overall.names", "overall.counts", "totalTime", "trialTime")', file = +Fname), !.
 
-%% generate_report_card is det.
+%% generate_overview(+RcHomeOs, -Section) is det.
 %
-% Generates the report card of *card_type(default)* type.
+% Generates filled template (tex file) of overview section in defined temporary
+% directory.
 %
-generate_report_card :-
-  generate_report_card(card_type(default)).
+% @param RcHomeOs     Absolute path to the temporary directory
+% @param SectionPath  Absolute path to the filled template
+%
+generate_overview(RcHomeOs, SectionPath) :-
+  % define section name as per latex template directory without ".tex" extension
+  Section = 'overview',
 
-%% generate_report_card(:CardType) is det.
-%
-% Generates the report card of given flavour.
-%
-% @param CardType  Type of the report card to be generated
-%
-generate_report_card(card_type(default)) :-
-  rc_temporary_directory(RcTempDir),
-  create_directory(RcTempDir),
   % get overall duration
   overall_duration(Tasks),
   overall_duration(Tasks, Time),
   atom_number(TotalTime, Time),
   totalTime <- TotalTime,
+
   % plot the pie
   overall_duration_2R(Tasks),
   overall_duration_piechart(TotalTimeFigure),
+
   % get basic experiment information
-  get_experiment_info(experimentId  , TrialId),
   get_experiment_info(experimentName, TrialName),
+  get_experiment_info(experimentId  , TrialId),
   get_experiment_info(creator       , TrialCreator),
   get_experiment_info(experiment    , TrialType),
   get_experiment_info(robot         , RobotType),
@@ -233,11 +233,97 @@ generate_report_card(card_type(default)) :-
   TrialTimeNumeric is TimeEnd - TimeStart,
   trialTime <- TrialTimeNumeric,
   atom_number(TrialTime, TrialTimeNumeric),
-  % Java calls
-  rc_temporary_directory(RcHome),
-  prolog_to_os_filename(RcHome, RcHomeOs),
-  jpl_datums_to_array([TrialId, TrialName, TrialCreator, TrialType, RobotType, TrialDescription, TrialTime, TotalTime, TotalTimeFigure], Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', basic, [RcHomeOs, Strings], RcPdf),
+
+  jpl_datums_to_array([TrialName, TrialId, TrialCreator, TrialType, RobotType, TrialDescription, TrialTime, TotalTime, TotalTimeFigure], Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+%% generate_actions(+RcHomeOs, -Section) is det.
+%
+% Generates filled template (tex file) of actions section in defined temporary
+% directory.
+%
+% @param RcHomeOs     Absolute path to the temporary directory
+% @param SectionPath  Absolute path to the filled template
+%
+generate_actions(RcHomeOs, SectionPath) :-
+  Section = 'actions',
+  %% jpl_datums_to_array([], Strings),
+  jpl_new('[Ljava.lang.String;', 0, Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+%% generate_statistics(+RcHomeOs, -Section) is det.
+%
+% Generates filled template (tex file) of statistics section in defined temporary
+% directory.
+%
+% @param RcHomeOs     Absolute path to the temporary directory
+% @param SectionPath  Absolute path to the filled template
+%
+generate_statistics(RcHomeOs, SectionPath) :-
+  Section = 'statistics',
+  %% jpl_datums_to_array([], Strings),
+  jpl_new('[Ljava.lang.String;', 0, Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+%% generate_failures(+RcHomeOs, -Section) is det.
+%
+% Generates filled template (tex file) of failures section in defined temporary
+% directory.
+%
+% @param RcHomeOs     Absolute path to the temporary directory
+% @param SectionPath  Absolute path to the filled template
+%
+generate_failures(RcHomeOs, SectionPath) :-
+  Section = 'failures',
+  %% jpl_datums_to_array([], Strings),
+  jpl_new('[Ljava.lang.String;', 0, Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+%% generate_summary(+RcHomeOs, -Section) is det.
+%
+% Generates filled template (tex file) of summary section in defined temporary
+% directory.
+%
+% @param RcHomeOs     Absolute path to the temporary directory
+% @param SectionPath  Absolute path to the filled template
+% 
+generate_summary(RcHomeOs, SectionPath) :-
+  Section = 'summary',
+  %% jpl_datums_to_array([], Strings),
+  jpl_new('[Ljava.lang.String;', 0, Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+%% generate_report_card is det.
+%
+% Generates the report card of *card_type(default)* type.
+%
+generate_report_card :-
+  generate_report_card(card_type(default)).
+
+%% generate_report_card(:CardType) is det.
+%
+% Generates the report card of given flavour - with predefined sections.
+%
+% @param CardType  Type of the report card to be generated
+%
+generate_report_card(card_type(default)) :-
+  % initialisation
+  rc_temporary_directory(RcTempDir),
+  create_directory(RcTempDir),
+  prolog_to_os_filename(RcTempDir, RcHomeOs),
+
+  % report card content
+  generate_overview(RcHomeOs, Introduction),
+  generate_actions(RcHomeOs, Actions),
+  generate_statistics(RcHomeOs, Statistics),
+  generate_failures(RcHomeOs, Failures),
+  generate_summary(RcHomeOs, Summary),
+
+  get_experiment_info(experimentId  , TrialId),
+  jpl_datums_to_array([Introduction, Actions, Statistics, Failures, Summary], Strings),
+  jpl_call( 'org.knowrob.report_card.Generator', rc, [RcHomeOs, TrialId, Strings], RcPdf),
+
+  % data exporting and information outputting
   export_data(data_format(csv)),
   export_data(data_format(r)),
   write('Your report card is available at:\n'),
