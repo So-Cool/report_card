@@ -4,6 +4,8 @@
 \usepackage{times}                                                  % times font
 \usepackage{mathptmx}                                      % times font in maths
 
+\usepackage{ifthen}                    % include sections into the main document
+
 \usepackage{lipsum}                                            % for development
 \usepackage{amsmath}
 % \usepackage[usenames,dvipsnames]{color}
@@ -58,25 +60,24 @@
   \end{@twocolumnfalse}
   ] % \lipsum[1]~\\[0.4cm]
 
-\section*{Overview}
-Experiment \textbf{$trialName}---codename \#\texttt{$trialID}---created by \emph{$trialCreator} is \emph{$trialType} experiment. Robot \emph{$robotType} performed a task described as ``$trialDescription'', which took $trialTime seconds.\\
+\ifthenelse{ \equal{$section0}{} }{}{\input{$section0}}
 
-The total active time spent on the task is: $totalTime seconds with in-detailed breakdown shown in \emph{Figure~\ref{fig:totalTime}}.
-\begin{figure}[htb]
-  \includegraphics[width=0.45\textwidth]{$totalTimeFigure}
-  \caption{Task-wise time breakdown.\label{fig:totalTime}}
-\end{figure}
+\ifthenelse{ \equal{$section1}{} }{}{\input{$section1}}
 
-\section*{Actions}
-\lipsum[2]
+\ifthenelse{ \equal{$section2}{} }{}{\input{$section2}}
 
-\section*{Statistics}
-\lipsum[3]
+\ifthenelse{ \equal{$section3}{} }{}{\input{$section3}}
 
-\section*{Failures}
-\lipsum[4]
+\ifthenelse{ \equal{$section4}{} }{}{\input{$section4}}
 
-\section*{Summary}
-\lipsum[5]
+\ifthenelse{ \equal{$section5}{} }{}{\input{$section5}}
+
+\ifthenelse{ \equal{$section6}{} }{}{\input{$section6}}
+
+\ifthenelse{ \equal{$section7}{} }{}{\input{$section7}}
+
+\ifthenelse{ \equal{$section8}{} }{}{\input{$section8}}
+
+\ifthenelse{ \equal{$section9}{} }{}{\input{$section9}}
 
 \end{document}

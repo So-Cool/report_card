@@ -1,0 +1,19 @@
+%% Arguments substitution information
+%%%% trialName        ---  argument0
+%%%% trialID          ---  argument1
+%%%% trialCreator     ---  argument2
+%%%% trialType        ---  argument3
+%%%% robotType        ---  argument4
+%%%% trialDescription ---  argument5
+%%%% trialTime        ---  argument6
+%%%% totalTime        ---  argument7
+%%%% totalTimeFigure  ---  argument8
+
+\section*{Overview}
+Experiment \textbf{$argument0}---codename \#\texttt{$argument1}---created by \emph{$argument2} is \emph{$argument3} experiment. Robot \emph{$argument4} performed a task described as ``$argument5'', which took $argument6 seconds.\\
+
+The total active time spent on the task is: $argument7 seconds with in-detailed breakdown shown in \emph{Figure~\ref{fig:totalTime}}.
+\begin{figure}[htb]
+  \includegraphics[width=0.45\textwidth]{$argument8}
+  \caption{Task-wise time breakdown.\label{fig:totalTime}}
+\end{figure}
