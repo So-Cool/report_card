@@ -101,9 +101,10 @@ generate_report_card.
 More details are available in the project documentation.
 
 ## TODO ##
-- [ ] Create wiki page for the project `http://wiki.ros.org/report_card`.
-- [ ] Generate documentation for the project.
-- [ ] Write user guide for the project.
+- [ ] Create a wiki page for the project `http://wiki.ros.org/report_card`.
+- [ ] Generate the documentation for the project.
+- [ ] Write a user guide for the project.
+- [ ] Include in the readme how to report bugs (error output and a compressed directory).
 
 [RCGblog]: http://So-Cool.github.io/ReportCardGenerator/
 [RCGwiki]: http://wiki.ros.org/report_card

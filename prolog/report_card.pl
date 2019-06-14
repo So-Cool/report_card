@@ -36,10 +36,23 @@
 :- module(report_card,
     [
       report_card_test/2,
-      card_type/1,
+
       data_format/1,
+      export_data/1,
+
+      card_type/1,
       generate_report_card/0,
-      generate_report_card/1
+      generate_report_card/1,
+      
+      rc_temporary_directory/1,
+      create_directory/1,
+
+      get_experiment_info/2,
+      generate_overview/2,
+      generate_actions/2,
+      generate_statistics/2,
+      generate_failures/2,
+      generate_summary/2
     ]).
 
 :- use_module(library('semweb/rdfs')).
@@ -57,12 +70,32 @@
 :- rdf_db:rdf_register_ns(knowrob, 'http://knowrob.org/kb/knowrob.owl#', [keep(true)]).
 :- rdf_db:rdf_register_ns(xsd, 'http://www.w3.org/2001/XMLSchema#', [keep(true)]).
 
+
+%% devel code
+custom_load_experiment(Path) :-
+    owl_parse(Path),
+    atom_concat('/home/knowrob/', LocalPath, Path),
+    file_directory_name(LocalPath, Dir),
+    atomic_list_concat(['http://knowrob.org/kb/knowrob.owl', Dir], '#', NameInstance),
+    rdf_assert(NameInstance, rdf:type, knowrob:'DirectoryName').
+
+%% log_home(-Location) is det.
+%
+% Defines who holds the logs.
+%
+% @param Location  Home of the user holding the logs.
+%
+log_home('/home/knowrob/').
+%% devel code
+
 /**
  * R variables names and their meaning:
- * * trialTime      - overall time of the experiment
- * * overall.names  - names of top-level activities
- * * overall.counts - total time of each top level activity
- * * totalTime      - total time of top level activities
+ * * trialTime          - overall time of the experiment
+ * * overall.names      - names of top-level activities
+ * * overall.counts     - total time of each top level activity
+ * * totalTime          - total time of top level activities
+ * * CRAMAchieve.names  - List of CRAMAchieve contexts
+ * * CRAMAchieve.counts - Occurrence counts corresponding to CRAMAchieve context
  */
 
 %% temporary_directory(-TempDirectory) is det.
@@ -219,7 +252,7 @@ generate_overview(RcHomeOs, SectionPath) :-
 
   % plot the pie
   overall_duration_2R(Tasks),
-  overall_duration_piechart(TotalTimeFigure),
+  overall_duration_piechart(TotalTimeFigurePath),
 
   % get basic experiment information
   get_experiment_info(experimentName, TrialName),
@@ -230,12 +263,23 @@ generate_overview(RcHomeOs, SectionPath) :-
   get_experiment_info(description   , TrialDescription),
   get_experiment_info(timeStart     , TimeStart),
   get_experiment_info(timeEnd       , TimeEnd),
-  TrialTimeNumeric is TimeEnd - TimeStart,
-  trialTime <- TrialTimeNumeric,
-  atom_number(TrialTime, TrialTimeNumeric),
 
-  jpl_datums_to_array([TrialName, TrialId, TrialCreator, TrialType, RobotType, TrialDescription, TrialTime, TotalTime, TotalTimeFigure], Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+  % if possible - given in the logs - get trial time
+  ( (number(TimeStart), number(TimeEnd)) ->
+      ( TrialTimeNumeric is TimeEnd - TimeStart,
+        trialTime <- TrialTimeNumeric,
+        atom_number(TrialTime, TrialTimeNumeric)
+      )
+  ;   ( trialTime <- 'NULL',
+        TrialTime = 'N/A'
+      )
+  ),
+
+  jpl_datums_to_array([TrialName, TrialId, TrialCreator, TrialType, RobotType, TrialDescription, TrialTime, TotalTime], Strings),
+  jpl_datums_to_array([TotalTimeFigurePath], RawStrings),
+  jpl_new('[[Ljava.lang.String;', 0, SeqStrings),
+  jpl_new('[[Ljava.lang.String;', 0, RawSeqStrings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings, RawStrings, SeqStrings, RawSeqStrings], SectionPath).
 
 %% generate_actions(+RcHomeOs, -Section) is det.
 %
@@ -247,9 +291,36 @@ generate_overview(RcHomeOs, SectionPath) :-
 %
 generate_actions(RcHomeOs, SectionPath) :-
   Section = 'actions',
-  %% jpl_datums_to_array([], Strings),
-  jpl_new('[Ljava.lang.String;', 0, Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+
+  % get path to the directory with images and logs
+  rdf_has(FullDir, rdf:type, knowrob:'DirectoryName'),
+  atomic_list_concat([_, Dir], '#', FullDir),
+  log_home(LogHome),
+  concat(LogHome, Dir, ImageDirectory),
+
+  % get path to random captured image and place it in the report card
+  findall(IN, rdf_has(_, knowrob:'linkToImageFile', literal(type(_, IN))), ImageList),
+  % in case there is no image return empty string
+  ( choose(ImageList, ImageName) -> atomic_list_concat([ImageDirectory, ImageName], '/', ImagePath)
+  ; ImagePath = ''
+  ),
+
+  % get total number of images captured
+  length(ImageList, ImagesNumberNumeric),
+  atom_number(ImagesNumberAtom, ImagesNumberNumeric),
+
+  % handle CRAMAchieve
+  cRAMAchieve_details(CRAMAchievePiePath, CaSuccessNumeric, CaTotalNumeric),
+  atom_number(CaSuccessAtom, CaSuccessNumeric),
+  atom_number(CaTotalAtom, CaTotalNumeric),
+
+
+  %% jpl_new('[Ljava.lang.String;', 0, Strings),
+  jpl_datums_to_array([ImagesNumberAtom, CaSuccessAtom, CaTotalAtom], Strings),
+  jpl_datums_to_array([ImagePath, CRAMAchievePiePath], RawStrings),
+  jpl_new('[[Ljava.lang.String;', 0, SeqStrings),
+  jpl_new('[[Ljava.lang.String;', 0, RawSeqStrings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings, RawStrings, SeqStrings, RawSeqStrings], SectionPath).
 
 %% generate_statistics(+RcHomeOs, -Section) is det.
 %
@@ -263,7 +334,10 @@ generate_statistics(RcHomeOs, SectionPath) :-
   Section = 'statistics',
   %% jpl_datums_to_array([], Strings),
   jpl_new('[Ljava.lang.String;', 0, Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+  jpl_new('[Ljava.lang.String;', 0, RawStrings),
+  jpl_new('[[Ljava.lang.String;', 0, SeqStrings),
+  jpl_new('[[Ljava.lang.String;', 0, RawSeqStrings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings, RawStrings, SeqStrings, RawSeqStrings], SectionPath).
 
 %% generate_failures(+RcHomeOs, -Section) is det.
 %
@@ -277,7 +351,10 @@ generate_failures(RcHomeOs, SectionPath) :-
   Section = 'failures',
   %% jpl_datums_to_array([], Strings),
   jpl_new('[Ljava.lang.String;', 0, Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+  jpl_new('[Ljava.lang.String;', 0, RawStrings),
+  jpl_new('[[Ljava.lang.String;', 0, SeqStrings),
+  jpl_new('[[Ljava.lang.String;', 0, RawSeqStrings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings, RawStrings, SeqStrings, RawSeqStrings], SectionPath).
 
 %% generate_summary(+RcHomeOs, -Section) is det.
 %
@@ -291,7 +368,10 @@ generate_summary(RcHomeOs, SectionPath) :-
   Section = 'summary',
   %% jpl_datums_to_array([], Strings),
   jpl_new('[Ljava.lang.String;', 0, Strings),
-  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings], SectionPath).
+  jpl_new('[Ljava.lang.String;', 0, RawStrings),
+  jpl_new('[[Ljava.lang.String;', 0, SeqStrings),
+  jpl_new('[[Ljava.lang.String;', 0, RawSeqStrings),
+  jpl_call( 'org.knowrob.report_card.Generator', section, [RcHomeOs, Section, Strings, RawStrings, SeqStrings, RawSeqStrings], SectionPath).
 
 %% generate_report_card is det.
 %
@@ -490,6 +570,118 @@ remove_knowrob([A|Before], Middle, After) :-
   append(Middle, [A1], MA),
   remove_knowrob(Before, MA, After).
 remove_knowrob([], A, A).
+
+%% choose(+List, -Element) is det.
+%
+% Chooses random element from given list; fails if the list is empty.
+%
+% @param List     List of arbitrary length
+% @param Element  A random element from the list
+%
+choose([], _) :-
+  !, false.
+choose(List, Element) :-
+  length(List, Length),
+  random(0, Length, Index),
+  nth0(Index, List, Element), !.
+
+%% cRAMAchieve_details(-PieChartPath, -Success, -Total) is det.
+%
+% Derives characteristics such as successful and total calls form CRAMAchieve
+% entries and plots a pie-chart based on those.
+%
+% @param PieChartPath  List of arbitrary length
+% @param Success       A random element from the list
+% @param Total         A random element from the list
+%
+cRAMAchieve_details(PieChartPath, Success, Total) :-
+  findall(
+    (Context, Success),
+    ( rdf_has(A, rdf:type, knowrob:'CRAMAchieve'),
+      rdf_has(A, knowrob:goalContext, literal(type(xsd:string, Context))),
+      rdf_has(A, knowrob:taskSuccess, literal(type(xsd:boolean, Success)))
+    ),
+    CA
+  ),
+  split_tuple(CA, [Clist, Slist]),
+  split_context(Clist, CountingList),
+  cRAMAchieve_2R_PiePlot(CountingList, PieChartPath),
+  count_successes(Slist, Success, Total).
+
+%% count_successes(+List, -Success, -Total) is det.
+%
+% Counts a number of successes (true) and total length (true & false) of the
+% list. Produces an error when other than true or false entry is in the list.
+%
+% @param List     List with true & false entries
+% @param Success  The count of true entries
+% @param Total    The length of the list
+%
+count_successes(List, Success, Total) :-
+  count_successes(List, 0, Success, 0, Total).
+count_successes([L|List], SCount, Success, TCount, Total) :-
+  ( L = true  -> SC is SCount + 1
+  ; L = false -> SC is SCount
+  ; (write('Unexpected success count!'), !, false)
+  ),
+  TC is TCount + 1,
+  count_successes(List, SC, Success, TC, Total).
+count_successes([], Success, Success, Total, Total).
+
+%% split_context(+List, -CountingList) is det.
+%
+% Counts number of occurrences of each unique entry in the input list. Outputs
+% the counts in form of a list of  (ID, Count) tuples.
+%
+% @param List          Arbitrary list with entries to be counted
+% @param CountingList  List of (Name, Count) tuples
+%
+split_context(List, CountingList) :-
+  split_context(List, [], CountingList), !.
+split_context([L|List], CL, CountingList) :-
+  count_occurences(L, List, No, NList),
+  split_context(NList, [(L,No)|CL], CountingList).
+split_context([], CountingList, CountingList).
+
+%% count_occurences(+L, +List, -Number, -NewList) is det.
+%
+% Part of the split_context predicate. Counts occurrences (Number) of L in the
+% List and returns NewList which is List without all occurrences of L.
+%
+% @param L        Element to be counted
+% @param List     List in which occurrences of elements are to be counted
+% @param Number   Count of specified element
+% @param NewList  Input list with removed all occurrences of specified element
+%
+count_occurences(L, List, Number, NewList) :-
+  count_occurences(L, List, [], NewList, 1, Number).
+count_occurences(Elem, [L|List], Nl, NewList, Nr, Number) :-
+  ( Elem = L -> (NNr is Nr + 1, E = [])
+  ; (NNr is Nr, E = [L])
+  ),
+  append(E, Nl, NNl),
+  count_occurences(Elem, List, NNl, NewList, NNr, Number).
+count_occurences(_, [], NewList, NewList, Number, Number).
+
+%% cRAMAchieve_2R_PiePlot(+Tasks, -PieChart) is det.
+%
+% Plots a pie-chart based on names and counts (CRAMAchieve) given in form of a
+% list of tuples with those values.
+%
+% @param Tasks     List of (Name, Count) tuples to be plotted
+% @param PieChart  Path to the plotted pie-chart
+%
+cRAMAchieve_2R_PiePlot(Tasks, PieChart) :-
+  split_tuple(Tasks, [Names, Numbers]),
+  % initialise R variable
+  'CRAMAchieve.names'  <- Names,
+  'CRAMAchieve.counts' <- Numbers,
+  % plot the pie
+  project_specific_path('CRAMAchieve.pdf', PieChart),
+  <- pdf(file = +PieChart),
+  %% <- pie('CRAMAchieve.counts', labels = 'CRAMAchieve.names', main = +"CRAMAchieve"),
+  <- pie('CRAMAchieve.counts', labels = sprintf(+"%s of\n%s", 'CRAMAchieve.counts', 'CRAMAchieve.names'), main = +"CRAMAchieve"),
+  <- invisible('dev.off()').
 
 %% report_card_test(+Value1, +Value2) is det.
 %

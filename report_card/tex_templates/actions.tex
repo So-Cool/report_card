@@ -1,2 +1,29 @@
+%% Arguments substitution information
+%%%% images number    ---  argument0
+%%%% CRAMAchieve suc  ---  argument1
+%%%% CRAMAchieve tot  ---  argument2
+%%%%%%%%
+%%%% imagePath        ---  rawArgument0
+%%%% CRAMAchieve Pie  ---  rawArgument1
+
+
 \section*{Actions}
-\lipsum[2]
+
+Robot's top level actions structure derived form \texttt{CRAMAchieve} objects is presented in \emph{Figure~\ref{fig:CRAMAchieve}}. $argument1 out of $argument2 of these actions were successful.\\
+
+\begin{figure}[htb]
+  \includegraphics[width=0.45\textwidth]{$rawArgument1}
+  \caption{\texttt{CRAMAchieve} structure.\label{fig:CRAMAchieve}}
+\end{figure}
+
+The robot captured \textbf{$argument0} photo(s) altogether%
+\ifthenelse{ \equal{$rawArgument0}{} }{. }{, one of which is shown in \emph{Figure~\ref{fig:objects}}. }%
+%
+Moreover it discovered \&numberOfObject different object(s).\\
+
+\ifthenelse{ \equal{$rawArgument0}{} }{}{
+  \begin{figure}[htb]
+    \includegraphics[width=0.45\textwidth]{$rawArgument0}
+    \caption{Sample image taken by the robot.\label{fig:objects}}
+  \end{figure}
+}

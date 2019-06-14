@@ -85,8 +85,8 @@ public class Generator {
   /**
    *  Escape LaTeX special characters in all strings of the array.
    *
-   *  @param  strings  Unescaped strings
-   *  @return          Escaped strings
+   *  @param  strings  Array with unescaped strings
+   *  @return          Array with escaped strings
    */
   private static String[] latexTheStrings(String[] strings) {
 
@@ -136,8 +136,7 @@ public class Generator {
    */
   public static String rc(String tempPath, String trialID, String[] arguments) {
 
-    // escape all LaTeX characters
-    String[] escapedArguments = latexTheStrings(arguments);
+    // do not escape LaTeX special characters as the arguments are always paths
 
     // create absolute paths
     File tempDir = new File(tempPath);
@@ -155,18 +154,18 @@ public class Generator {
       JLRConverter converter = new JLRConverter(sourceDir);
 
       // up to 10 sections are supported ATM
-      if(escapedArguments.length > 10) {
+      if(arguments.length > 10) {
         System.err.println("Up to 10 sections are supported at the moment; " +
           "please extend Java and LaTeX code if you need such feature.");
       }
 
       // Substitute LaTeX variables
       converter.replace("trialID", trialID);
-      for(int i = 0; i < escapedArguments.length; ++i) {
-        converter.replace("section" + Integer.toString(i), escapedArguments[i]);
+      for(int i = 0; i < arguments.length; ++i) {
+        converter.replace("section" + Integer.toString(i), arguments[i]);
       }
       // fill with blank conversion up to 10 LaTeX variables
-      for(int i = escapedArguments.length; i < 10; ++i) {
+      for(int i = arguments.length; i < 10; ++i) {
         converter.replace("section" + Integer.toString(i), "");
       }
 
@@ -193,19 +192,53 @@ public class Generator {
   }
 
   /**
-   *  Generate a *simplistic flavour* report card with given substitutions in
+   *  Generate a single section of a report card with given substitutions in
    *  specified temporary directory.
    *
-   *  @param  fileName   Absolute path to the report card temporary directory
-   *  @param  arguments  Values to be substituted in the LaTeX template
-   *  @return            Absolute path to the created report card
+   *  @param  tempPath         Absolute path to the report card temporary
+   *                           directory
+   *  @param  section          Section file name without .tex extension to be
+   *                           used - the name must be exactly the same as in
+   *                           tex_templates directory
+   *  @param  arguments        Values to be substituted in the LaTeX template -
+   *                           will be escaped
+   *  @param  rawArguments     Values to be substituted in the LaTeX template -
+   *                           will NOT be escaped
+   *  @param  seqArguments     Sequences of values to be substituted in the
+   *                           LaTeX template - will be escaped
+   *  @param  rawSeqArguments  Sequences of values to be substituted in the
+   *                           LaTeX template - will NOT be escaped
+   *  @return                  Absolute path to the created report card
    */
   public static String section(String tempPath, String section,
-    String[] arguments) {
+    String[] arguments, String[] rawArguments, String[][] seqArguments,
+    String[][] rawSeqArguments) {
+
+    // up to 20 arguments per section are supported ATM
+    String overError = "Up to 20 arguments per section are supported at the " +
+      "moment; please extend Java and LaTeX code if you need such feature.";
+    if(arguments.length > 20 || rawArguments.length > 20 ||
+      seqArguments.length > 20 || rawSeqArguments.length > 20) {
+      System.err.println(overError);
+    }
+    for(int i = 0; i < seqArguments.length; ++i) {
+      if(seqArguments[i].length > 20) {
+        System.err.println(overError);   
+      }
+    }
+    for(int i = 0; i < rawSeqArguments.length; ++i) {
+      if(rawSeqArguments[i].length > 20) {
+        System.err.println(overError);   
+      }
+    }
 
     // escape all LaTeX characters
     String[] escapedArguments = latexTheStrings(arguments);
-
+    String[][] escapedSeqArguments = new String[seqArguments.length][];
+    for(int i = 0; i < seqArguments.length; ++i) {
+      escapedSeqArguments[i] = latexTheStrings(seqArguments[i]);
+    }
+    
     // create absolute paths
     File tempDir = new File(tempPath);
     File texOutput = new File(tempDir.getAbsolutePath() + File.separator +
@@ -224,16 +257,20 @@ public class Generator {
       // Create LaTeX conversion engine
       JLRConverter converter = new JLRConverter(sourceDir);
 
-      // up to 20 arguments per section are supported ATM
-      if(escapedArguments.length > 20) {
-        System.err.println("Up to 20 arguments per section are supported at " +
-          "the moment; please extend Java and LaTeX code if you need such " +
-          "feature.");
-      }
-
       // Substitute LaTeX variables
       for(int i = 0; i < escapedArguments.length; ++i) {
         converter.replace("argument" + Integer.toString(i), escapedArguments[i]);
+      }
+      for(int i = 0; i < rawArguments.length; ++i) {
+        converter.replace("rawArgument" + Integer.toString(i), rawArguments[i]);
+      }
+      for(int i = 0; i < escapedSeqArguments.length; ++i) {
+        converter.replace("seqArguments" + Integer.toString(i),
+          escapedSeqArguments[i]);
+      }
+      for(int i = 0; i < rawSeqArguments.length; ++i) {
+        converter.replace("rawSeqArguments" + Integer.toString(i),
+          rawSeqArguments[i]);
       }
 
       if (!converter.parse(sectionTemplate, texOutput)) {
